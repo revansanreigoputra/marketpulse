@@ -1,90 +1,97 @@
-# MarketPulse — Stock Market Analytics Data Pipeline
+# MarketPulse — Pipeline Data Analitik Pasar Saham
 
-MarketPulse is an end-to-end Data Engineering portfolio project that collects stock market data, transforms it into analytical datasets, loads Gold-layer metrics into PostgreSQL, and visualizes the results through an interactive dashboard.
+MarketPulse adalah proyek portofolio Data Engineering yang membangun pipeline data dari pengambilan data pasar saham, pembersihan data, transformasi menjadi dataset analitik, pemuatan data ke PostgreSQL, hingga visualisasi melalui dashboard interaktif.
 
-The project demonstrates data ingestion, data cleaning, analytical transformations, orchestration, data quality checks, relational database loading, and dashboard development.
+Proyek ini menerapkan proses *data ingestion*, *data cleaning*, transformasi analitik, orkestrasi pipeline, pemeriksaan kualitas data, penyimpanan dalam basis data relasional, dan pengembangan dashboard.
 
-## Project Overview
+## 1. Gambaran Umum Proyek
 
-MarketPulse currently processes daily stock market data for:
+MarketPulse memproses data pasar saham harian untuk tiga simbol:
 
-- Apple (AAPL)
-- IBM (IBM)
-- Microsoft (MSFT)
+- Apple (`AAPL`)
+- IBM (`IBM`)
+- Microsoft (`MSFT`)
 
-The pipeline produces daily and monthly analytical metrics that can be queried in PostgreSQL and explored through the Streamlit dashboard.
+Pipeline menghasilkan metrik analitik harian dan bulanan yang disimpan pada Gold Layer dan dapat dianalisis melalui PostgreSQL serta dashboard Streamlit.
 
-## Architecture
+## 2. Arsitektur Sistem
 
 ```text
-Stock Market API
-       |
-       v
-Raw Data
-       |
-       v
-Data Cleaning
-       |
-       v
-Silver Data
-       |
-       +---------------------+
-       |                     |
-       v                     v
-Daily Metrics          Monthly Metrics
-       |                     |
-       +----------+----------+
-                  |
-                  v
-        Gold Data (Parquet)
-                  |
-                  v
-             PostgreSQL
-                  |
-                  v
-        Streamlit + Plotly
-             Dashboard
+       Stock Market API
+              |
+              v
+          Raw Data
+              |
+              v
+        Data Cleaning
+              |
+              v
+         Silver Data
+              |
+       +------+------+
+       |             |
+       v             v
+ Daily Metrics  Monthly Metrics
+       |             |
+       +------+------+
+              |
+              v
+       Gold Data (Parquet)
+              |
+              v
+          PostgreSQL
+              |
+              v
+       Streamlit + Plotly
+           Dashboard
 
-Apache Airflow orchestrates the pipeline
-and runs data quality checks.
+Apache Airflow mengatur urutan eksekusi
+pipeline dan menjalankan pemeriksaan
+kualitas data.
 ```
 
-## Technology Stack
+## 3. Teknologi yang Digunakan
 
-| Technology     | Purpose                                     |
-| -------------- | ------------------------------------------- |
-| Python         | Data ingestion and transformation           |
-| Pandas         | Data processing and analytical calculations |
-| Apache Airflow | Pipeline orchestration and task monitoring  |
-| PostgreSQL     | Storage for Gold-layer analytical data      |
-| SQLAlchemy     | Database connectivity                       |
-| Streamlit      | Interactive dashboard                       |
-| Plotly         | Interactive charts                          |
-| Pytest         | Automated testing                           |
-| Docker Compose | Container management                        |
-| WSL Ubuntu     | Development environment                     |
+| Teknologi | Kegunaan |
+|---|---|
+| Python | Pengambilan dan transformasi data |
+| Pandas | Pengolahan data dan perhitungan analitik |
+| Apache Airflow | Orkestrasi pipeline dan pemantauan task |
+| PostgreSQL | Penyimpanan data analitik Gold Layer |
+| SQLAlchemy | Koneksi aplikasi ke basis data |
+| Streamlit | Pengembangan dashboard interaktif |
+| Plotly | Visualisasi grafik interaktif |
+| Pytest | Pengujian otomatis |
+| Docker Compose | Pengelolaan container |
+| WSL Ubuntu | Lingkungan pengembangan |
 
-## Data Pipeline
+## 4. Alur Data Pipeline
 
-The `marketpulse_etl` DAG contains seven tasks:
+Pipeline dijalankan melalui DAG `marketpulse_etl` di Apache Airflow yang terdiri dari tujuh task:
 
-1. `fetch_market_data` — retrieves stock market data.
-2. `clean_prices` — cleans and validates price data.
-3. `calculate_daily_metrics` — calculates daily analytical metrics.
-4. `calculate_monthly_metrics` — aggregates data into monthly metrics.
-5. `load_gold_to_postgres` — loads Gold datasets into PostgreSQL.
-6. `check_gold_quality` — validates daily Gold data.
-7. `check_monthly_metrics` — validates monthly analytical metrics.
+1. `fetch_market_data` — mengambil data pasar saham dari penyedia API.
+2. `clean_prices` — membersihkan dan memvalidasi data harga.
+3. `calculate_daily_metrics` — menghitung metrik analitik harian.
+4. `calculate_monthly_metrics` — mengagregasi data menjadi metrik bulanan.
+5. `load_gold_to_postgres` — memuat dataset Gold ke PostgreSQL.
+6. `check_gold_quality` — memeriksa kualitas data Gold harian.
+7. `check_monthly_metrics` — memeriksa konsistensi metrik bulanan.
 
-Airflow manages task dependencies and exposes task execution logs and statuses through its web interface.
+Apache Airflow mengatur dependensi antartask serta menyediakan informasi status dan log eksekusi untuk membantu pemantauan pipeline.
 
-## Gold Data Model
+### Dokumentasi Eksekusi Airflow
 
-### `gold_daily_metrics`
+Screenshot berikut menunjukkan dokumentasi visual pipeline MarketPulse di Apache Airflow.
 
-Contains daily stock prices and calculated metrics.
+![Pipeline ETL MarketPulse di Apache Airflow](docs/images/marketpulse_etl.png)
 
-Key columns include:
+## 5. Model Data Gold Layer
+
+### 5.1. `gold_daily_metrics`
+
+Tabel ini menyimpan data harga saham harian beserta metrik yang dihitung dari data tersebut.
+
+Kolom utama:
 
 - `symbol`
 - `trade_date`
@@ -98,13 +105,13 @@ Key columns include:
 - `daily_range`
 - `intraday_return_pct`
 
-The primary key is `(symbol, trade_date)`.
+Kunci utama tabel adalah kombinasi `(symbol, trade_date)`.
 
-### `gold_monthly_metrics`
+### 5.2. `gold_monthly_metrics`
 
-Contains monthly stock performance metrics.
+Tabel ini menyimpan metrik kinerja saham bulanan.
 
-Key columns include:
+Kolom utama:
 
 - `symbol`
 - `month`
@@ -116,57 +123,70 @@ Key columns include:
 - `previous_month_end_close`
 - `monthly_return_pct`
 
-The primary key is `(symbol, month)`.
+Kunci utama tabel adalah kombinasi `(symbol, month)`.
 
-## Dashboard
+## 6. Dashboard MarketPulse
 
-The Streamlit dashboard provides:
+Dashboard dikembangkan menggunakan Streamlit dan Plotly untuk membantu pengguna mengeksplorasi data analitik yang tersimpan di PostgreSQL.
 
-- Stock symbol filtering.
-- Date range filtering.
-- Daily record count.
-- Number of selected stocks.
-- Latest available trading date.
-- Average daily return.
-- Daily closing-price visualization.
-- Daily return analysis.
-- Monthly performance visualization.
-- Analytical data tables.
+Fitur yang tersedia:
 
-The dashboard reads Gold-layer data from PostgreSQL.
+- Filter berdasarkan simbol saham.
+- Filter berdasarkan rentang tanggal.
+- Informasi jumlah baris data harian.
+- Informasi jumlah saham yang dipilih.
+- Informasi tanggal perdagangan terbaru.
+- Rata-rata return harian.
+- Grafik tren harga penutupan.
+- Analisis return harian.
+- Grafik kinerja bulanan.
+- Tabel data Gold harian dan bulanan.
+- Unduhan data analitik dalam format CSV.
 
-## Validation Results
+### Tampilan Dashboard
 
-The project has been tested with the following results:
+**Tampilan pertama**
 
-| Validation                  |   Result |
-| --------------------------- | -------: |
-| Automated tests             | 7 passed |
-| Python compilation check    |   Passed |
-| Daily Gold records          |      300 |
-| Monthly Gold records        |       18 |
-| Daily Gold missing keys     |        0 |
-| Daily Gold duplicate keys   |        0 |
-| Monthly Gold missing keys   |        0 |
-| Monthly Gold duplicate keys |        0 |
+![Dashboard MarketPulse — Tampilan 1](docs/images/marketpulse-dashboard1.png)
 
-The successful Airflow run completed all seven pipeline tasks, including the PostgreSQL loading task and both data quality checks.
+**Tampilan kedua**
 
-These figures describe the dataset and successful run observed during development; they may change when new data is ingested.
+![Dashboard MarketPulse — Tampilan 2](docs/images/marketpulse-dashboard2.png)
 
-## Prerequisites
+Dashboard membaca data dari tabel Gold Layer di PostgreSQL sehingga metrik dan visualisasi dapat diperbarui ketika data sumber berubah dan cache aplikasi diperbarui.
 
-Before running the project, install or prepare:
+## 7. Hasil Pengujian dan Validasi
 
-- Docker Desktop with WSL integration.
+Berdasarkan hasil pengujian selama pengembangan, proyek memperoleh hasil berikut.
+
+| Pemeriksaan | Hasil |
+|---|---:|
+| Pengujian otomatis | 7 berhasil |
+| Pemeriksaan kompilasi Python | Berhasil |
+| Jumlah record Gold harian | 300 |
+| Jumlah record Gold bulanan | 18 |
+| Kunci Gold harian yang kosong | 0 |
+| Kunci Gold harian duplikat | 0 |
+| Kunci Gold bulanan yang kosong | 0 |
+| Kunci Gold bulanan duplikat | 0 |
+
+Seluruh tujuh task pada eksekusi Airflow yang diamati berhasil diselesaikan, termasuk pemuatan data ke PostgreSQL dan pemeriksaan kualitas data harian serta bulanan.
+
+Angka tersebut menggambarkan dataset dan hasil eksekusi yang diamati selama pengembangan. Hasil dapat berubah apabila data baru dimasukkan ke dalam pipeline.
+
+## 8. Prasyarat
+
+Sebelum menjalankan proyek, siapkan:
+
+- Docker Desktop dengan integrasi WSL.
 - WSL Ubuntu.
-- Python and a virtual environment.
+- Python dan virtual environment.
 - Git.
-- An API key for the configured market data provider.
+- API key dari penyedia data pasar saham yang digunakan.
 
-## Environment Configuration
+## 9. Konfigurasi Environment
 
-Create a local `.env` file in the project root. Use the following structure and fill in your own credentials:
+Buat file `.env` pada direktori utama proyek. Gunakan struktur berikut dan isi kredensial dengan milik sendiri.
 
 ```dotenv
 ALPHA_VANTAGE_API_KEY=your_api_key
@@ -178,94 +198,94 @@ POSTGRES_PORT=5432
 AIRFLOW_UID=1001
 ```
 
-**Never commit the real `.env` file, API keys, or database passwords to GitHub.**
+**Penting:** jangan mengunggah file `.env`, API key asli, atau kata sandi basis data ke GitHub.
 
-The host configuration differs by execution environment:
+Konfigurasi host PostgreSQL berbeda sesuai lingkungan eksekusi:
 
-- Local Python and Streamlit use `127.0.0.1`.
-- Airflow inside Docker uses the PostgreSQL service hostname `postgres`.
+- Python lokal dan Streamlit menggunakan `127.0.0.1`.
+- Airflow di dalam Docker menggunakan nama service PostgreSQL, yaitu `postgres`.
 
-## Installation and Execution
+## 10. Instalasi dan Menjalankan Proyek
 
-### 1. Clone the repository
+### 10.1. Clone repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/revansanreigoputra/marketpulse.git
 cd marketpulse
 ```
 
-Replace the placeholder with the actual repository URL.
-
-### 2. Create and activate a virtual environment
+### 10.2. Membuat dan mengaktifkan virtual environment
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install Python dependencies
+### 10.3. Menginstal dependensi Python
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
+### 10.4. Mengatur environment
 
-Create the `.env` file using the configuration structure described above.
+Buat file `.env` di direktori utama proyek berdasarkan konfigurasi pada bagian sebelumnya.
 
-### 5. Start the Docker services
+### 10.5. Menjalankan layanan Docker
 
 ```bash
 docker compose up -d --build
 ```
 
-Check the service status:
+Periksa status container:
 
 ```bash
 docker compose ps
 ```
 
-### 6. Open Airflow
+Pastikan layanan PostgreSQL dan Airflow berjalan dengan baik.
 
-Visit:
+### 10.6. Menjalankan pipeline Airflow
+
+Buka alamat berikut:
 
 `http://localhost:8080`
 
-Find the `marketpulse_etl` DAG and trigger a run. Check the Graph view and task logs to monitor the pipeline.
+Cari DAG `marketpulse_etl`, kemudian jalankan pipeline. Gunakan tampilan Graph dan log task untuk memantau proses serta memeriksa hasil eksekusi.
 
-### 7. Open the dashboard
+### 10.7. Menjalankan dashboard
 
-With the virtual environment activated, run:
+Pastikan PostgreSQL aktif dan tabel Gold sudah terisi. Dengan virtual environment yang aktif, jalankan:
 
 ```bash
 streamlit run src/marketpulse/dashboard/app.py
 ```
 
-Visit:
+Buka dashboard melalui:
 
 `http://localhost:8501`
 
-Ensure PostgreSQL is running and the Gold tables have been populated before opening the dashboard.
-
-### 8. Run automated tests
+### 10.8. Menjalankan pengujian otomatis
 
 ```bash
 PYTHONPATH=src pytest -q
 ```
 
-Expected result from the current test suite:
+Hasil yang diharapkan berdasarkan pengujian saat ini:
 
 ```text
 7 passed
 ```
 
-Check Python syntax:
+Periksa sintaks Python:
 
 ```bash
 python -m compileall -q src tests airflow/dags
 ```
 
-## Project Structure
+## 11. Struktur Proyek
+
+Gambaran umum struktur direktori:
 
 ```text
 marketpulse/
@@ -278,6 +298,11 @@ marketpulse/
 │   ├── raw/
 │   ├── silver/
 │   └── gold/
+├── docs/
+│   └── images/
+│       ├── marketpulse_etl.png
+│       ├── marketpulse-dashboard1.png
+│       └── marketpulse-dashboard2.png
 ├── src/
 │   └── marketpulse/
 │       ├── dashboard/
@@ -293,17 +318,21 @@ marketpulse/
 └── README.md
 ```
 
-This structure is illustrative. Adjust it to match the directories actually committed to the repository.
+Struktur di atas merupakan gambaran umum. Direktori seperti data, log, dan file konfigurasi lokal tidak semuanya harus dilacak atau diunggah ke Git.
 
-## Future Improvements
+## 12. Pengembangan Selanjutnya
 
-- Add automated scheduling and recovery strategies.
-- Improve logging and alerting for failed pipeline tasks.
-- Expand data quality rules and monitoring.
-- Add more stock symbols and historical data.
-- Improve dashboard performance and analytical features.
-- Add CI automation for tests and code quality checks.
+Beberapa pengembangan yang dapat dilakukan:
 
-## Learning Outcomes
+- Menambahkan penjadwalan otomatis dan mekanisme pemulihan ketika pipeline gagal.
+- Meningkatkan logging dan notifikasi kegagalan.
+- Menambahkan aturan pemeriksaan kualitas data.
+- Menambah simbol saham dan rentang data historis.
+- Meningkatkan performa dan fitur analitik dashboard.
+- Mengintegrasikan CI untuk pengujian otomatis dan pemeriksaan kualitas kode.
 
-Through this project, I practiced building a data pipeline from ingestion to analytics, orchestrating tasks with Apache Airflow, modeling analytical datasets, loading data into PostgreSQL, validating data quality, and presenting results through an interactive dashboard.
+## 13. Hasil Pembelajaran
+
+Melalui proyek MarketPulse, saya mempraktikkan pembangunan pipeline data dari proses ingestion hingga analitik, orkestrasi task menggunakan Apache Airflow, penyusunan dataset analitik harian dan bulanan, pemuatan data ke PostgreSQL, validasi kualitas data, serta penyajian hasil melalui dashboard interaktif.
+
+Proyek ini menjadi bagian dari portofolio pembelajaran Data Engineering yang menunjukkan penerapan proses pengolahan data secara terstruktur dari sumber hingga visualisasi.
