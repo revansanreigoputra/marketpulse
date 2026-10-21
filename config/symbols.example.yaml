@@ -1,0 +1,8 @@
+symbols:
+  - AAPL.US
+  - MSFT.US
+  - GOOGL.US
+
+source:
+  name: stooq
+  interval: daily

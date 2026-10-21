@@ -1,0 +1,45 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local market data
+data/raw/
+data/silver/
+data/gold/
+
+# Python cache and test artifacts
+.pytest_cache/
+__pycache__/
+*.py[cod]
+
+# Backup files
+*.bak
+
+# Local data files
+data/
+
+# Logs
+*.log
+
+# Local configuration
+config/symbols.yaml
+
+# Airflow runtime files
+airflow/logs/
+airflow/airflow.db
+airflow/airflow.db-*
+airflow/dags/__pycache__/
+airflow/plugins/__pycache__/
+airflow/config/__pycache__/
+
+# Local backups and temporary files
+*.bak
+*.tmp
+.DS_Store
